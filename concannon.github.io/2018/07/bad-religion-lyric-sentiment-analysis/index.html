@@ -1,0 +1,768 @@
+
+
+  
+    
+  
+
+
+  
+
+
+
+
+  
+
+
+  
+
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="Hugo 0.45.1 with theme Tranquilpeak 0.4.3-BETA">
+    <title>Bad Religion Lyric Sentiment Analysis</title>
+    <meta name="author" content="Connor Concannon">
+    <meta name="keywords" content="">
+
+    <link rel="icon" href="/favicon.png">
+    
+
+    
+    <meta name="description" content="IntroductionBad Religion is a punk band that formed in the Los Angeles area in the early 1980s and continues to make great music and tour today. Since hearing their music almost 20 years ago, I have been an avid follower. Over the course of 30 plus years, and over 20 albums, there are a wealth of lyrics to digest. And this is no ordinary punk band - the group deserves and relishes in the label of thesaurus punk.">
+    <meta property="og:description" content="IntroductionBad Religion is a punk band that formed in the Los Angeles area in the early 1980s and continues to make great music and tour today. Since hearing their music almost 20 years ago, I have been an avid follower. Over the course of 30 plus years, and over 20 albums, there are a wealth of lyrics to digest. And this is no ordinary punk band - the group deserves and relishes in the label of thesaurus punk.">
+    <meta property="og:type" content="blog">
+    <meta property="og:title" content="Bad Religion Lyric Sentiment Analysis">
+    <meta property="og:url" content="/2018/07/bad-religion-lyric-sentiment-analysis/">
+    <meta property="og:site_name" content="Explorations in Data">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Explorations in Data">
+    <meta name="twitter:description" content="IntroductionBad Religion is a punk band that formed in the Los Angeles area in the early 1980s and continues to make great music and tour today. Since hearing their music almost 20 years ago, I have been an avid follower. Over the course of 30 plus years, and over 20 albums, there are a wealth of lyrics to digest. And this is no ordinary punk band - the group deserves and relishes in the label of thesaurus punk.">
+    
+    
+
+    
+    
+
+    
+      <meta property="og:image" content="//www.gravatar.com/avatar/95a089392e4a1a7fbab9136b1ef8383d?s=640">
+    
+
+    
+    
+    
+
+    
+
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha256-eZrrJcwDc/3uDhsdt61sL2oOBY362qM3lon1gyExkL0=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.4/jquery.fancybox.min.css" integrity="sha256-vuXZ9LGmmwtjqFX1F+EKin1ThZMub58gKULUyf0qECk=" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.4/helpers/jquery.fancybox-thumbs.min.css" integrity="sha256-SEa4XYAHihTcEP1f5gARTB2K26Uk8PsndQYHQC1f4jU=" crossorigin="anonymous" />
+    
+    
+    <link rel="stylesheet" href="/css/style-jsjn0006wyhpyzivf6yceb31gvpjatbcs3qzjvlumobfnugccvobqwxnnaj8.min.css" />
+    
+    
+
+    
+      
+    
+    
+  </head>
+
+  <body>
+    <div id="blog">
+      <header id="header" data-behavior="4">
+  <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+  <div class="header-title">
+    <a class="header-title-link" href="/">Explorations in Data</a>
+  </div>
+  
+    
+      <a class="header-right-picture "
+         href="/#about">
+    
+    
+    
+      
+        <img class="header-picture" src="//www.gravatar.com/avatar/95a089392e4a1a7fbab9136b1ef8383d?s=90" alt="Author&#39;s picture" />
+      
+    
+    </a>
+  
+</header>
+
+      <nav id="sidebar" data-behavior="4">
+  <div class="sidebar-container">
+    
+      <div class="sidebar-profile">
+        <a href="/#about">
+          <img class="sidebar-profile-picture" src="//www.gravatar.com/avatar/95a089392e4a1a7fbab9136b1ef8383d?s=110" alt="Author&#39;s picture" />
+        </a>
+        <h4 class="sidebar-profile-name">Connor Concannon</h4>
+        
+          <h5 class="sidebar-profile-bio">Data Science Leader and PhD Candidate</h5>
+        
+      </div>
+    
+    <ul class="sidebar-buttons">
+      
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="/">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-home"></i>
+      
+      <span class="sidebar-button-desc">Home</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="/categories">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-bookmark"></i>
+      
+      <span class="sidebar-button-desc">Categories</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="/tags">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-tags"></i>
+      
+      <span class="sidebar-button-desc">Tags</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="/archives">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-archive"></i>
+      
+      <span class="sidebar-button-desc">Archives</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="/#about">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-question"></i>
+      
+      <span class="sidebar-button-desc">About</span>
+    </a>
+  </li>
+
+
+    </ul>
+    <ul class="sidebar-buttons">
+      
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://github.com/concannon">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-github"></i>
+      
+      <span class="sidebar-button-desc">GitHub</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://linkedin.com/connor-concannon">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-linkedin"></i>
+      
+      <span class="sidebar-button-desc">LinkedIn</span>
+    </a>
+  </li>
+
+
+    </ul>
+    <ul class="sidebar-buttons">
+      
+
+    </ul>
+  </div>
+</nav>
+
+      
+
+      <div id="main" data-behavior="4"
+        class="
+               hasCoverMetaIn
+               ">
+        <article class="post" itemscope itemType="http://schema.org/BlogPosting">
+          
+          
+            <div class="post-header main-content-wrap text-left">
+  
+    <h1 class="post-title" itemprop="headline">
+      Bad Religion Lyric Sentiment Analysis
+    </h1>
+  
+  
+  <div class="postShorten-meta post-meta">
+    
+      <time itemprop="datePublished" datetime="2018-07-27T00:00:00Z">
+        
+  July 27, 2018
+
+      </time>
+    
+    
+  </div>
+
+</div>
+          
+          <div class="post-content markdown" itemprop="articleBody">
+            <div class="main-content-wrap">
+              <div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>Bad Religion is a punk band that formed in the Los Angeles area in the early 1980s and continues to make great music and tour today. Since hearing their music almost 20 years ago, I have been an avid follower. Over the course of 30 plus years, and over 20 albums, there are a wealth of lyrics to digest. And this is no ordinary punk band - the group deserves and relishes in the label of <a href="https://music.avclub.com/where-to-begin-with-the-thesaurus-punk-of-bad-religion-1798278095">thesaurus punk</a>. What other band can work in terms like ‘trammel’, ‘entropy’, and ‘fecundity’ at 120 beats per minute? This seemed like a perfect opportunity to put Julia Silge and David Robinson’s book <a href="http://tidytextmining.com">Tidy Text Mining with R</a> to use.</p>
+</div>
+<div id="top-words-by-sentiment" class="section level2">
+<h2>Top Words by Sentiment</h2>
+<p>With a name like Bad Religion, I wasn’t expecting many positive words. Terms like wrong, dead/die, lie, bad, etc. top the list. The words designated as positive are not much better. Usually, when a song includes a word like ‘modern’ it actually isn’t in a positive context - such as ‘modern man, evolutionary destroyer’.</p>
+<pre class="r"><code>brtidy &lt;- b %&gt;% 
+  unnest_tokens(word,lyrics) %&gt;% 
+  anti_join(stop_words) 
+
+
+brsen &lt;- brtidy %&gt;%
+  inner_join(get_sentiments(&quot;bing&quot;)) 
+
+
+brsen %&gt;%
+  count(word,sentiment,sort=T) %&gt;% 
+  top_n(n=20) %&gt;%
+  ungroup() %&gt;% 
+  mutate(Word=reorder(word,n)) %&gt;% 
+  ggplot(aes(Word,n,fill=sentiment))+
+  geom_col()+
+  facet_wrap(~sentiment,scales=&#39;free_y&#39;)+
+  coord_flip()+
+  theme_ipsum_tw(grid=&#39;none&#39;)+
+  theme(legend.position=&#39;none&#39;)+
+  scale_fill_viridis(discrete=T)+
+  labs(title=&#39;Top 20 Bad Religion Lyrics by Sentiment&#39;)</code></pre>
+<p><img src="/post/2018-08-19-Bad-Religion-Sentiment-Analysis_files/figure-html/unnamed-chunk-1-1.png" width="960" /></p>
+</div>
+<div id="tf-idf" class="section level2">
+<h2>TF-IDF</h2>
+<p><a href="https://www.tidytextmining.com/tfidf.html#the-bind_tf_idf-function">Term frequency inverse document frequency</a> (TF-IDF) is a technique used to find important words in a particular document - or song in this case. The results of the tf-idf calculation grouped by album are also not surprising. Most of the top words are used in the chorus of songs on that album - and thus repeated many times.</p>
+<pre class="r"><code>brwords &lt;- brtidy %&gt;% 
+  count(word,album,sort=T)
+total_words &lt;- brwords %&gt;% 
+  group_by(album) %&gt;% 
+  summarise(total=sum(n))
+
+total_words</code></pre>
+<pre><code>## # A tibble: 24 x 2
+##    album                        total
+##    &lt;chr&gt;                        &lt;int&gt;
+##  1 80-85                          166
+##  2 Against The Grain             1370
+##  3 Bad Religion                   283
+##  4 Generator                      718
+##  5 How Could Hell Be Any Worse?   952
+##  6 Into The Unknown               418
+##  7 New Maps of Hell              1371
+##  8 No Control                     987
+##  9 No Substance                  1108
+## 10 Punk-O-Rama 8                  186
+## # ... with 14 more rows</code></pre>
+<pre class="r"><code>brwords &lt;- left_join(brwords,total_words) %&gt;% 
+  bind_tf_idf(word,album,n)
+
+#brwords %&gt;% arrange(-tf_idf) %&gt;% View()
+
+brwords %&gt;%
+  arrange(desc(tf_idf)) %&gt;%
+  mutate(word = factor(word, levels = rev(unique(word)))) %&gt;% 
+  group_by(album) %&gt;% 
+  dplyr::filter(total&gt;500) %&gt;% 
+  top_n(5) %&gt;% 
+  ungroup %&gt;%
+  ggplot(aes(word, tf_idf, fill = tf_idf)) +
+  geom_col(show.legend = FALSE) +
+  labs(x = NULL, y = &quot;tf-idf&quot;) +
+  theme_ipsum_tw(grid=&#39;none&#39;)+
+  theme(legend.position=&#39;none&#39;)+
+  scale_fill_viridis()+
+  facet_wrap(~album, ncol = 2, scales = &quot;free&quot;) +
+  coord_flip()</code></pre>
+<p><img src="/post/2018-08-19-Bad-Religion-Sentiment-Analysis_files/figure-html/unnamed-chunk-2-1.png" width="960" /></p>
+</div>
+<div id="wordcloud" class="section level2">
+<h2>Wordcloud</h2>
+<p>It had to be done. I am not surprised by any of the high-frequency words in this plot. Many of Bad Religion’s songs cover heady topics like conquering the world, finding truth, and the meaning of life.</p>
+<pre class="r"><code>pal &lt;- brewer.pal(6,&quot;PRGn&quot;)
+
+brtidy %&gt;% 
+  count(word) %&gt;% 
+  with(wordcloud(word,n,max.words=250,colors=pal))</code></pre>
+<p><img src="/post/2018-08-19-Bad-Religion-Sentiment-Analysis_files/figure-html/unnamed-chunk-3-1.png" width="960" /></p>
+</div>
+<div id="sentiment-across-albums" class="section level2">
+<h2>Sentiment Across Albums</h2>
+<p>This plot is the result of a calculation to derive the aggregate sentiment score (positive words minus negative words) across albums. No album had a positive sentiment score - though I doubt ‘Grandiloquent’ is in the Bing sentiment dictionary! That ‘Stranger than Fiction’ was the album with the lowest sentiment score makes sense - I believe this album was released in the wake of some turmoil between two of the founding members.</p>
+<pre class="r"><code>brtidy %&gt;% 
+  filter(!album %in% c(&#39;Short Music For Short People&#39;,&#39;Punk Rock Song&#39;,&#39;Tested&#39;,&#39;Punk-O-Rama 8&#39;,&#39;Punk Rock Songs (The Epic Years)&#39;)) %&gt;% 
+  inner_join(get_sentiments(&quot;bing&quot;)) %&gt;% 
+  count(album,sentiment) %&gt;% 
+  spread(sentiment,n,fill=0) %&gt;% 
+  mutate(sentiment=positive-negative) %&gt;%
+  mutate(album=reorder(album,sentiment)) %&gt;% 
+  ggplot(aes(album,sentiment,fill=sentiment))+geom_bar(stat=&#39;identity&#39;)+
+  coord_flip()+
+  theme_ipsum_tw(grid=&#39;none&#39;)+
+  theme(legend.position=&#39;none&#39;)+
+  labs(title=&#39;Bad Religion Albums by Aggregate Sentiment&#39;)</code></pre>
+<p><img src="/post/2018-08-19-Bad-Religion-Sentiment-Analysis_files/figure-html/unnamed-chunk-4-1.png" width="960" /></p>
+</div>
+<div id="n-grams" class="section level2">
+<h2>N-Grams</h2>
+<p>The tables show the highest frequency word pairs across the corpus. Again, many of these bigrams are found in the chorus, and their high frequency makes sense.</p>
+<pre class="r"><code>bigrams &lt;- b %&gt;% 
+  unnest_tokens(bigram,lyrics,token=&#39;ngrams&#39;,n=2) 
+
+bigrams %&gt;% 
+  separate(bigram, c(&#39;word1&#39;,&#39;word2&#39;),sep=&quot; &quot;) %&gt;% 
+  filter(!word1 %in% stop_words$word) %&gt;% 
+  filter(!word2 %in% stop_words$word) %&gt;% 
+  count(word1, word2, sort=T)</code></pre>
+<pre><code>## # A tibble: 3,848 x 3
+##    word1    word2          n
+##    &lt;chr&gt;    &lt;chr&gt;      &lt;int&gt;
+##  1 21st     century       17
+##  2 2nd      generation    14
+##  3 trash    2nd           14
+##  4 white    trash         14
+##  5 fast     life          12
+##  6 mediocre minds         11
+##  7 american dream         10
+##  8 bad      religion      10
+##  9 yah      yah           10
+## 10 american jesus          9
+## # ... with 3,838 more rows</code></pre>
+<pre class="r"><code>bigrams %&gt;% 
+  count(bigram,sort=T)</code></pre>
+<pre><code>## # A tibble: 25,420 x 2
+##    bigram        n
+##    &lt;chr&gt;     &lt;int&gt;
+##  1 in the      222
+##  2 and the     135
+##  3 of the      120
+##  4 on the       92
+##  5 to the       82
+##  6 i don&#39;t      77
+##  7 to be        75
+##  8 the world    74
+##  9 and i        70
+## 10 just a       66
+## # ... with 25,410 more rows</code></pre>
+</div>
+
+              
+            </div>
+          </div>
+          <div id="post-footer" class="post-footer main-content-wrap">
+            
+              
+                
+                
+                  <div class="post-footer-tags">
+                    <span class="text-color-light text-small">TAGGED IN</span><br/>
+                    
+  <a class="tag tag--primary tag--small" href="/tags/r/">R</a>
+
+  <a class="tag tag--primary tag--small" href="/tags/nlp/">NLP</a>
+
+                  </div>
+                
+              
+            
+            
+  <div class="post-actions-wrap">
+      <nav >
+        <ul class="post-actions post-action-nav">
+          
+            <li class="post-action">
+              
+                <a class="post-action-btn btn btn--disabled">
+              
+                  <i class="fa fa-angle-left"></i>
+                  <span class="hide-xs hide-sm text-small icon-ml">NEXT</span>
+                </a>
+            </li>
+            <li class="post-action">
+              
+                <a class="post-action-btn btn btn--default tooltip--top" href="/2015/07/hello-r-markdown/" data-tooltip="Hello R Markdown">
+              
+                  <span class="hide-xs hide-sm text-small icon-mr">PREVIOUS</span>
+                  <i class="fa fa-angle-right"></i>
+                </a>
+            </li>
+          
+        </ul>
+      </nav>
+    <ul class="post-actions post-action-share" >
+      
+        <li class="post-action hide-lg hide-md hide-sm">
+          <a class="post-action-btn btn btn--default btn-open-shareoptions" href="#btn-open-shareoptions">
+            <i class="fa fa-share-alt"></i>
+          </a>
+        </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=/2018/07/bad-religion-lyric-sentiment-analysis/">
+              <i class="fa fa-facebook-official"></i>
+            </a>
+          </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=/2018/07/bad-religion-lyric-sentiment-analysis/">
+              <i class="fa fa-twitter"></i>
+            </a>
+          </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=/2018/07/bad-religion-lyric-sentiment-analysis/">
+              <i class="fa fa-google-plus"></i>
+            </a>
+          </li>
+        
+      
+      
+        <li class="post-action">
+          <a class="post-action-btn btn btn--default" href="#disqus_thread">
+            <i class="fa fa-comment-o"></i>
+          </a>
+        </li>
+      
+      <li class="post-action">
+        
+          <a class="post-action-btn btn btn--default" href="#">
+        
+          <i class="fa fa-list"></i>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+
+            
+              
+                <div id="disqus_thread">
+  <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+              
+            
+          </div>
+        </article>
+        <footer id="footer" class="main-content-wrap">
+  <span class="copyrights">
+    &copy; 2018 Connor Concannon. All Rights Reserved
+  </span>
+</footer>
+
+      </div>
+      <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+        
+  <div class="post-actions-wrap">
+      <nav >
+        <ul class="post-actions post-action-nav">
+          
+            <li class="post-action">
+              
+                <a class="post-action-btn btn btn--disabled">
+              
+                  <i class="fa fa-angle-left"></i>
+                  <span class="hide-xs hide-sm text-small icon-ml">NEXT</span>
+                </a>
+            </li>
+            <li class="post-action">
+              
+                <a class="post-action-btn btn btn--default tooltip--top" href="/2015/07/hello-r-markdown/" data-tooltip="Hello R Markdown">
+              
+                  <span class="hide-xs hide-sm text-small icon-mr">PREVIOUS</span>
+                  <i class="fa fa-angle-right"></i>
+                </a>
+            </li>
+          
+        </ul>
+      </nav>
+    <ul class="post-actions post-action-share" >
+      
+        <li class="post-action hide-lg hide-md hide-sm">
+          <a class="post-action-btn btn btn--default btn-open-shareoptions" href="#btn-open-shareoptions">
+            <i class="fa fa-share-alt"></i>
+          </a>
+        </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=/2018/07/bad-religion-lyric-sentiment-analysis/">
+              <i class="fa fa-facebook-official"></i>
+            </a>
+          </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=/2018/07/bad-religion-lyric-sentiment-analysis/">
+              <i class="fa fa-twitter"></i>
+            </a>
+          </li>
+        
+          <li class="post-action hide-xs">
+            <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=/2018/07/bad-religion-lyric-sentiment-analysis/">
+              <i class="fa fa-google-plus"></i>
+            </a>
+          </li>
+        
+      
+      
+        <li class="post-action">
+          <a class="post-action-btn btn btn--default" href="#disqus_thread">
+            <i class="fa fa-comment-o"></i>
+          </a>
+        </li>
+      
+      <li class="post-action">
+        
+          <a class="post-action-btn btn btn--default" href="#">
+        
+          <i class="fa fa-list"></i>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+
+      </div>
+      <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+  <i id="btn-close-shareoptions" class="fa fa-close"></i>
+  <ul class="share-options">
+    
+      <li class="share-option">
+        <a class="share-option-btn" target="new" href="https://www.facebook.com/sharer/sharer.php?u=%2F2018%2F07%2Fbad-religion-lyric-sentiment-analysis%2F">
+          <i class="fa fa-facebook-official"></i><span>Share on Facebook</span>
+        </a>
+      </li>
+    
+      <li class="share-option">
+        <a class="share-option-btn" target="new" href="https://twitter.com/intent/tweet?text=%2F2018%2F07%2Fbad-religion-lyric-sentiment-analysis%2F">
+          <i class="fa fa-twitter"></i><span>Share on Twitter</span>
+        </a>
+      </li>
+    
+      <li class="share-option">
+        <a class="share-option-btn" target="new" href="https://plus.google.com/share?url=%2F2018%2F07%2Fbad-religion-lyric-sentiment-analysis%2F">
+          <i class="fa fa-google-plus"></i><span>Share on Google&#43;</span>
+        </a>
+      </li>
+    
+  </ul>
+</div>
+<div id="share-options-mask" class="share-options-mask"></div>
+    </div>
+    
+    <div id="about">
+  <div id="about-card">
+    <div id="about-btn-close">
+      <i class="fa fa-remove"></i>
+    </div>
+    
+      <img id="about-card-picture" src="//www.gravatar.com/avatar/95a089392e4a1a7fbab9136b1ef8383d?s=110" alt="Author&#39;s picture" />
+    
+    <h4 id="about-card-name">Connor Concannon</h4>
+    
+      <div id="about-card-bio">Data Science Leader and PhD Candidate</div>
+    
+    
+      <div id="about-card-job">
+        <i class="fa fa-briefcase"></i>
+        <br/>
+        Deputy Director of Analytics
+      </div>
+    
+    
+      <div id="about-card-location">
+        <i class="fa fa-map-marker"></i>
+        <br/>
+        New York
+      </div>
+    
+  </div>
+</div>
+
+    <div id="algolia-search-modal" class="modal-container">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="close-button"><i class="fa fa-close"></i></span>
+      <a href="https://algolia.com" target="_blank" rel="noopener" class="searchby-algolia text-color-light link-unstyled">
+        <span class="searchby-algolia-text text-color-light text-small">by</span>
+        <img class="searchby-algolia-logo" src="https://www.algolia.com/static_assets/images/press/downloads/algolia-light.svg">
+      </a>
+      <i class="search-icon fa fa-search"></i>
+      <form id="algolia-search-form">
+        <input type="text" id="algolia-search-input" name="search"
+          class="form-control input--large search-input" placeholder="Search" />
+      </form>
+    </div>
+    <div class="modal-body">
+      <div class="no-result text-color-light text-center">no post found</div>
+      <div class="results">
+        
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="/2018/07/bad-religion-lyric-sentiment-analysis/">
+                <h3 class="media-heading">Bad Religion Lyric Sentiment Analysis</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Jul 7, 2018
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather">IntroductionBad Religion is a punk band that formed in the Los Angeles area in the early 1980s and continues to make great music and tour today. Since hearing their music almost 20 years ago, I have been an avid follower. Over the course of 30 plus years, and over 20 albums, there are a wealth of lyrics to digest. And this is no ordinary punk band - the group deserves and relishes in the label of thesaurus punk.</div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="/2015/07/hello-r-markdown/">
+                <h3 class="media-heading">Hello R Markdown</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Jul 7, 2015
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather">R MarkdownThis is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see http://rmarkdown.rstudio.com.
+You can embed an R code chunk like this:
+summary(cars)## speed dist ## Min. : 4.0 Min. : 2.00 ## 1st Qu.:12.0 1st Qu.: 26.00 ## Median :15.0 Median : 36.00 ## Mean :15.4 Mean : 42.98 ## 3rd Qu.</div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="/2015/06/welcome-to-tranquilpeak-0.4.3-beta/">
+                <h3 class="media-heading">Welcome to Tranquilpeak 0.4.3-BETA</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Jun 6, 2015
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>Tranquilpeak is a gorgeous responsive theme for Hugo blog framework. It has many features and integrated services to improve user experience.
+</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="/1/01/">
+                <h3 class="media-heading"></h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Jan 1, 0001
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather">Bad-Religion-Lyrics-Text-Analysiscode{white-space: pre;}pre:not([class]) {background-color: white;}if (window.hljs && document.readyState && document.readyState === "complete") {window.setTimeout(function() {hljs.initHighlighting();}, 0);}h1 {font-size: 34px;}h1.title {font-size: 38px;}h2 {font-size: 30px;}h3 {font-size: 24px;}h4 {font-size: 18px;}h5 {font-size: 16px;}h6 {font-size: 12px;}.table th:not([align]) {text-align: left;}.</div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+      </div>
+    </div>
+    <div class="modal-footer">
+      <p class="results-count text-medium"
+         data-message-zero="no post found"
+         data-message-one="1 post found"
+         data-message-other="{n} posts found">
+         4 posts found
+      </p>
+    </div>
+  </div>
+</div>
+    
+  
+    
+    <div id="cover" style="background-image:url('/images/drops.jpg');"></div>
+  
+
+
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js" integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44=" crossorigin="anonymous"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js" integrity="sha256-/BfiIkHlHoVihZdc6TFuj7MmJ0TWcWsMXkeDFwhi0zw=" crossorigin="anonymous"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.7/js/jquery.fancybox.min.js" integrity="sha256-GEAnjcTqVP+vBp3SSc8bEDQqvWAZMiHyUSIorrWwH50=" crossorigin="anonymous"></script>
+
+
+<script src="/js/script-qi9wbxp2ya2j6p7wx1i6tgavftewndznf4v0hy2gvivk1rxgc3lm7njqb6bz.min.js"></script>
+
+
+
+<script>
+$(document).ready(function() {
+  hljs.configure({ classPrefix: '', useBR: false });
+  $('pre.code-highlight > code, pre > code').each(function(i, block) {
+    if (!$(this).hasClass('codeblock')) {
+      $(this).addClass('codeblock');
+    }
+    hljs.highlightBlock(block);
+  });
+});
+</script>
+
+
+  
+    
+      <script>
+        var disqus_config = function () {
+          this.page.url = '\/2018\/07\/bad-religion-lyric-sentiment-analysis\/';
+          
+            this.page.identifier = '\/2018\/07\/bad-religion-lyric-sentiment-analysis\/'
+          
+        };
+        (function() {
+          
+          
+          if (window.location.hostname == "localhost") {
+            return;
+          }
+          var d = document, s = d.createElement('script');
+          var disqus_shortname = 'hugo-tranquilpeak-theme';
+          s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+          s.setAttribute('data-timestamp', +new Date());
+          (d.head || d.body).appendChild(s);
+        })();
+      </script>
+    
+  
+
+
+
+    
+  </body>
+</html>
+
