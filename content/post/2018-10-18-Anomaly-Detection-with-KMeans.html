@@ -1,0 +1,386 @@
+---
+title: "Anomaly Detection Exercise"
+date: "2018-10-19 20:30:04"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+
+
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The task in this exercise is to identify or characterize anomalous prescription behavior in a synthetic dataset containing time series information of providers and three types of prescriptions. This document will describe how the data was processed and analyzed to identify anomalous behavior.</p>
+<p>I will treat this analysis as an unsupervised learning problem, since the labels (over-prescriber status) is unknown. Unsupervised learning techniques are appropriate to find latent structure or identify groups in unlabeled data. In this exercise, I hope to identify over-prescribers by using k-means cluster analysis.</p>
+</div>
+<div id="pre-processing" class="section level2">
+<h2>Pre-Processing</h2>
+<p>As with any dataset, a number of pre-processing steps are necessary before beginning any analysis. This section will describe each pre-processing step.</p>
+<p>First, any missing values were recoded as zeros. This might not be appropriate in all domains. Another possible technique would be to impute the missing values based on the mean or median of the feature. For the sake of this exercise, I assumed that a missing value in one of the patient or payment measures simply indicated no patients or payments for the month. Relatedly, there were a few negative values in the data, which did not make sense. I recoded negative values as zero.</p>
+<p>Second, because there were only six features provided, I created a number of additional features. For example, I created features such as ‘total patients’ and ‘total payments,’ ‘proportion of total payments(and patients) that were X type,’ and ‘payments per patient’ for each prescription drug type. I also created measures that incorporated the time series aspect of the data. For instance, for each provider ID, I created cumulative measures of patients and payments for each drug type. I also created a set of measures that measured the percentage change in payments over the previous month, within each provider ID, for each drug type. The addition of these measures resulted in 27 features, compared to six originally.</p>
+<p>Third, because many of the new measures are on different scales (some are counts of people, some are dollars, some are percentage change, etc.), it is good practice to center and scale them. In this case, from each value, I subtracted the mean of the feature and divided by the standard deviation. This way, all of the features are on an even playing field and can be analyzed with confidence.</p>
+<p>Lastly, I identified instances where features were highly correlated (greater than 0.9) with another one another and dropped one of these duplicates. This process dropped one variable (cumulative Adderall payments) from the analysis.</p>
+</div>
+<div id="exploratory-data-analysis" class="section level2">
+<h2>Exploratory Data Analysis</h2>
+<p>Because the data is mostly numeric, I first examined the correlations between each of them, noting strong correlations between opioid-related measures and the proportion of antibiotics prescriptions, total payments, and total patients.</p>
+<p>Next, I performed principal components analysis (PCA) to transform the features from highly-correlated ones into uncorrelated variables (‘principal components’). After running the analysis, and plotting the proportion of variance that is explained by each principal component, I see that the first two principal components explain just over a quarter of the variance in the data, and that the first ten principal components explain 75 percent of the variance.</p>
+<p>Similarly, a biplot show some, but not great, separation among the features. These findings are somewhat expected since I have only a few variables to work with, and all of the features are derived from those in some way. Nevertheless, there is probably enough to work with to identify potential anomalous providers.</p>
+<p><img src="/post/2018-10-18-Anomaly-Detection-with-KMeans_files/figure-html/corr-1.png" width="1056" /></p>
+<p><img src="/post/2018-10-18-Anomaly-Detection-with-KMeans_files/figure-html/pca-1.png" width="960" /></p>
+<pre><code>## [[1]]</code></pre>
+<p><img src="/post/2018-10-18-Anomaly-Detection-with-KMeans_files/figure-html/pca-2.png" width="960" /></p>
+</div>
+<div id="k-means-clustering-for-anomaly-detection" class="section level2">
+<h2>K-means Clustering for Anomaly Detection</h2>
+<p>I decided to use an unsupervised technique, k-means clustering, to identify anomalous providers. K-means is an appropriate choice when working with unlabeled data, and is very easy to implement. K-means is preferable over another clustering method, such as hierarchical clustering, because I am not trying to uncover any latent hierarchy in the data.</p>
+<p>The optimal number of clusters depends on the dataset, so one way to determine how many clusters should be used is to generate a range of clusters, and assess the error metric (sum of squared errors) to see where the metric begins to taper off or resemble an elbow. The plot below depicts the error metric against cluster values ranging from one to nine. There is an elbow shape around five or six clusters, suggesting this is an appropriate number of clusters to use on this dataset.</p>
+<p>Using six clusters results in one particular cluster that looks interesting. It consists of 27 observations and five providers.</p>
+<p><img src="/post/2018-10-18-Anomaly-Detection-with-KMeans_files/figure-html/clustering-1.png" width="960" /></p>
+<table>
+<caption><span id="tab:clustering">Table 1: </span>Cluster Observations and Provider Counts</caption>
+<thead>
+<tr class="header">
+<th align="left">.cluster</th>
+<th align="right">Observations</th>
+<th align="right">Unique Providers</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="right">7322</td>
+<td align="right">2151</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="right">27</td>
+<td align="right">5</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="right">5140</td>
+<td align="right">1972</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="right">351</td>
+<td align="right">327</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="right">20610</td>
+<td align="right">2856</td>
+</tr>
+<tr class="even">
+<td align="left">6</td>
+<td align="right">8624</td>
+<td align="right">1059</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Potentially Anomalous Provider IDs</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">UY8bW4koFtgJI8J7</td>
+</tr>
+<tr class="even">
+<td align="left">GLwAKSb708GXX52I</td>
+</tr>
+<tr class="odd">
+<td align="left">wwyJwO6CL1dqIooh</td>
+</tr>
+<tr class="even">
+<td align="left">azXdkxORxbkUXDV0</td>
+</tr>
+<tr class="odd">
+<td align="left">YvXc9PhW83aoHti9</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="exploring-outliers" class="section level2">
+<h2>Exploring outliers</h2>
+<p>The table and plots below highlight the five potentially anomalous providers for each of the metric groups. The five providers I identified clearly stand out with higher Adderall and opioid patients, higher payments for Adderall and opioids, higher rates of payment per patient, and higher than average rates of change in payments for each prescription type. For example, the cluster I identified averages 76 opioid patients and almost one million in opioid payments, when the next closest cluster averages about 3 opioid patients and 1,600 in opioid payments. Clearly, the five providers stick out as outliers within the group of 3,000 total providers.</p>
+<table>
+<caption><span id="tab:outliers">Table 2: </span>Unscaled Feature Means by Cluster</caption>
+<thead>
+<tr class="header">
+<th align="left">.cluster</th>
+<th align="right">AdderallPatients</th>
+<th align="right">AdderallPayments</th>
+<th align="right">AntibioPatients</th>
+<th align="right">AntibioPayments</th>
+<th align="right">OpioidPatients</th>
+<th align="right">OpioidPayments</th>
+<th align="right">TotalPayments</th>
+<th align="right">TotalPatients</th>
+<th align="right">PropPatAdd</th>
+<th align="right">PropPatAnti</th>
+<th align="right">PropPatOpi</th>
+<th align="right">PropPayAdd</th>
+<th align="right">PropPayAnti</th>
+<th align="right">PropPayOpi</th>
+<th align="right">PayPerAdd</th>
+<th align="right">PayPerAnti</th>
+<th align="right">PayPerOpi</th>
+<th align="right">PatPerAdd</th>
+<th align="right">PatPerAnti</th>
+<th align="right">PatPerOpi</th>
+<th align="right">CumPatAdd</th>
+<th align="right">CumPatAnti</th>
+<th align="right">CumPatOpi</th>
+<th align="right">CumPayAdd</th>
+<th align="right">CumPayAnti</th>
+<th align="right">CumPayOpi</th>
+<th align="right">ChgPay</th>
+<th align="right">ChgPayAdd</th>
+<th align="right">ChgPayAnti</th>
+<th align="right">ChgPayOpi</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">1</td>
+<td align="right">8.9</td>
+<td align="right">3271.8</td>
+<td align="right">2.6</td>
+<td align="right">2526.5</td>
+<td align="right">0.5</td>
+<td align="right">116.7</td>
+<td align="right">5916.0</td>
+<td align="right">12.0</td>
+<td align="right">0.7</td>
+<td align="right">0.3</td>
+<td align="right">0.0</td>
+<td align="right">0.7</td>
+<td align="right">0.3</td>
+<td align="right">0.0</td>
+<td align="right">474.9</td>
+<td align="right">949.7</td>
+<td align="right">31.3</td>
+<td align="right">0.0</td>
+<td align="right">0.2</td>
+<td align="right">0.1</td>
+<td align="right">39.1</td>
+<td align="right">65.6</td>
+<td align="right">10.1</td>
+<td align="right">12122.0</td>
+<td align="right">201978.0</td>
+<td align="right">4538.3</td>
+<td align="right">68.6</td>
+<td align="right">1196.9</td>
+<td align="right">147.9</td>
+<td align="right">38.6</td>
+</tr>
+<tr class="even">
+<td align="left">2</td>
+<td align="right">108.4</td>
+<td align="right">440998.0</td>
+<td align="right">4.0</td>
+<td align="right">40332.9</td>
+<td align="right">76.7</td>
+<td align="right">957265.8</td>
+<td align="right">1438597.7</td>
+<td align="right">189.2</td>
+<td align="right">0.5</td>
+<td align="right">0.2</td>
+<td align="right">0.3</td>
+<td align="right">0.4</td>
+<td align="right">0.1</td>
+<td align="right">0.5</td>
+<td align="right">4396.6</td>
+<td align="right">4446.4</td>
+<td align="right">12469.3</td>
+<td align="right">0.0</td>
+<td align="right">0.2</td>
+<td align="right">0.0</td>
+<td align="right">711.4</td>
+<td align="right">130.5</td>
+<td align="right">514.9</td>
+<td align="right">3477063.5</td>
+<td align="right">533166.9</td>
+<td align="right">5433702.7</td>
+<td align="right">21870.5</td>
+<td align="right">15696.0</td>
+<td align="right">307.6</td>
+<td align="right">404176.1</td>
+</tr>
+<tr class="odd">
+<td align="left">3</td>
+<td align="right">0.8</td>
+<td align="right">129.9</td>
+<td align="right">1.4</td>
+<td align="right">1248.1</td>
+<td align="right">3.4</td>
+<td align="right">1672.0</td>
+<td align="right">3051.0</td>
+<td align="right">5.6</td>
+<td align="right">0.1</td>
+<td align="right">0.2</td>
+<td align="right">0.5</td>
+<td align="right">0.1</td>
+<td align="right">0.3</td>
+<td align="right">0.5</td>
+<td align="right">45.1</td>
+<td align="right">568.8</td>
+<td align="right">310.9</td>
+<td align="right">0.0</td>
+<td align="right">0.1</td>
+<td align="right">0.1</td>
+<td align="right">28.8</td>
+<td align="right">62.8</td>
+<td align="right">13.5</td>
+<td align="right">7837.0</td>
+<td align="right">192857.0</td>
+<td align="right">6920.9</td>
+<td align="right">29.9</td>
+<td align="right">39.1</td>
+<td align="right">73.0</td>
+<td align="right">803.9</td>
+</tr>
+<tr class="even">
+<td align="left">4</td>
+<td align="right">3.0</td>
+<td align="right">2442.7</td>
+<td align="right">96.4</td>
+<td align="right">658562.1</td>
+<td align="right">1.1</td>
+<td align="right">477.5</td>
+<td align="right">661483.3</td>
+<td align="right">100.6</td>
+<td align="right">0.0</td>
+<td align="right">0.9</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+<td align="right">1.0</td>
+<td align="right">0.0</td>
+<td align="right">290.8</td>
+<td align="right">14780.1</td>
+<td align="right">54.4</td>
+<td align="right">0.1</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+<td align="right">35.1</td>
+<td align="right">165.5</td>
+<td align="right">11.2</td>
+<td align="right">11089.8</td>
+<td align="right">866051.7</td>
+<td align="right">3335.6</td>
+<td align="right">12647.9</td>
+<td align="right">403.8</td>
+<td align="right">57241.6</td>
+<td align="right">138.7</td>
+</tr>
+<tr class="odd">
+<td align="left">5</td>
+<td align="right">1.4</td>
+<td align="right">190.9</td>
+<td align="right">6.2</td>
+<td align="right">18572.1</td>
+<td align="right">0.5</td>
+<td align="right">61.9</td>
+<td align="right">18825.8</td>
+<td align="right">8.1</td>
+<td align="right">0.2</td>
+<td align="right">0.8</td>
+<td align="right">0.1</td>
+<td align="right">0.0</td>
+<td align="right">0.9</td>
+<td align="right">0.0</td>
+<td align="right">74.2</td>
+<td align="right">3433.6</td>
+<td align="right">29.7</td>
+<td align="right">0.1</td>
+<td align="right">0.0</td>
+<td align="right">0.0</td>
+<td align="right">19.7</td>
+<td align="right">42.0</td>
+<td align="right">6.7</td>
+<td align="right">4814.0</td>
+<td align="right">115973.1</td>
+<td align="right">1550.2</td>
+<td align="right">228.4</td>
+<td align="right">75.9</td>
+<td align="right">1166.8</td>
+<td align="right">41.0</td>
+</tr>
+<tr class="even">
+<td align="left">6</td>
+<td align="right">1.8</td>
+<td align="right">280.5</td>
+<td align="right">7.6</td>
+<td align="right">25869.5</td>
+<td align="right">0.6</td>
+<td align="right">95.0</td>
+<td align="right">26246.0</td>
+<td align="right">10.1</td>
+<td align="right">0.2</td>
+<td align="right">0.7</td>
+<td align="right">0.1</td>
+<td align="right">0.1</td>
+<td align="right">0.9</td>
+<td align="right">0.0</td>
+<td align="right">88.4</td>
+<td align="right">3972.6</td>
+<td align="right">41.9</td>
+<td align="right">0.1</td>
+<td align="right">0.0</td>
+<td align="right">0.1</td>
+<td align="right">65.3</td>
+<td align="right">164.0</td>
+<td align="right">20.3</td>
+<td align="right">17543.1</td>
+<td align="right">625765.9</td>
+<td align="right">5480.0</td>
+<td align="right">296.3</td>
+<td align="right">133.2</td>
+<td align="right">1485.5</td>
+<td align="right">66.1</td>
+</tr>
+</tbody>
+</table>
+<p><img src="/post/2018-10-18-Anomaly-Detection-with-KMeans_files/figure-html/outliers-1.png" width="960" /><img src="/post/2018-10-18-Anomaly-Detection-with-KMeans_files/figure-html/outliers-2.png" width="960" /><img src="/post/2018-10-18-Anomaly-Detection-with-KMeans_files/figure-html/outliers-3.png" width="960" /><img src="/post/2018-10-18-Anomaly-Detection-with-KMeans_files/figure-html/outliers-4.png" width="960" /></p>
+</div>
+<div id="limitations-and-further-research" class="section level2">
+<h2>Limitations and Further Research</h2>
+<p>Although I am confident that my methods correctly identified five anomalous providers out of over 3,000, there are certainly limitations to the analysis and ways in which it could be improved.</p>
+<p>First, I have only limited data and no context for the analysis. The providers I identified could be located in densely-populated areas, or specialize in ADHD &amp; pain management, which might explain the high rates of Adderall and opioid prescriptions. If I had access to data regarding the locality, specialization, or other metrics regarding patients and payments, the analysis could be improved.</p>
+<p>Second, although the data is time-series in nature, I did not attempt to decompose the time-series to its core components to identify seasonality, trend, or cyclical patterns. It is possible that using that technique may give different results.</p>
+<p>Third, because I chose an unsupervised approach, I have no ability to confirm the accuracy of my findings. If the exercise included labels about known over-prescribing providers, I could build a supervised learning model that predicts the likelihood of over-prescribing.</p>
+<p>Finally, I have no information about the resources available to investigate potentially anomalous providers. My approach identified five providers out of over 3,000, about one tenth of a percent. If an oversight agency has resources to investigate one percent, or just one provider, the results of my analysis may change.</p>
+</div>
+<div id="conclusion" class="section level2">
+<h2>Conclusion</h2>
+<p>This was an enlightening exercise with real-world implications. As the prompt described, over-prescription creates serious challenges for public health. Using unsupervised learning techniques, I was able to identify five providers out of over 3,000 whose prescribing behavior seems anomalous and warrants further investigation.</p>
+<p>The five providers with potentially anomalous prescribing patterns are those listed below.</p>
+<table>
+<thead>
+<tr class="header">
+<th align="left">Potentially Anomalous Provider IDs</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">UY8bW4koFtgJI8J7</td>
+</tr>
+<tr class="even">
+<td align="left">GLwAKSb708GXX52I</td>
+</tr>
+<tr class="odd">
+<td align="left">wwyJwO6CL1dqIooh</td>
+</tr>
+<tr class="even">
+<td align="left">azXdkxORxbkUXDV0</td>
+</tr>
+<tr class="odd">
+<td align="left">YvXc9PhW83aoHti9</td>
+</tr>
+</tbody>
+</table>
+</div>

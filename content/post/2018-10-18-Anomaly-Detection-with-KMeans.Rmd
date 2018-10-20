@@ -1,0 +1,460 @@
+---
+title: "Anomaly Detection Exercise"
+date: "`r Sys.time()`"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, message = FALSE, warning = FALSE,
+                      fig.width=10, fig.height=10)
+
+
+#Load and install if missing
+ipak <- function(pkg){
+new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+if (length(new.pkg)) 
+    install.packages(new.pkg, dependencies = TRUE)
+sapply(pkg, require, character.only = TRUE)
+}
+
+# Load packages
+packages <- c('tidyverse','DescTools','cluster','caret','broom','ggfortify',
+              'corrr','corrplot','knitr','kableExtra','gghighlight')
+ipak(packages)
+
+
+set.seed(813)
+
+d <- read.csv('C:/Users/Connor/Desktop/DiveplaneTest/data.csv')
+#Desc(d,plotit=T)
+```
+
+## Introduction
+
+The task in this exercise is to identify or characterize anomalous prescription behavior in a synthetic dataset containing time series information of providers and three types of prescriptions. This document will describe how the data was processed and analyzed to identify anomalous behavior.
+
+I will treat this analysis as an unsupervised learning problem, since the labels (over-prescriber status) is unknown. Unsupervised learning techniques are appropriate to find latent structure or identify groups in unlabeled data. In this exercise, I hope to identify over-prescribers by using k-means cluster analysis.
+
+## Pre-Processing
+
+As with any dataset, a number of pre-processing steps are necessary before beginning any analysis. This section will describe each pre-processing step.
+
+First, any missing values were recoded as zeros. This might not be appropriate in all domains. Another possible technique would be to impute the missing values based on the mean or median of the feature. For the sake of this exercise, I assumed that a missing value in one of the patient or payment measures simply indicated no patients or payments for the month. Relatedly, there were a few negative values in the data, which did not make sense. I recoded negative values as zero. 
+
+Second, because there were only six features provided, I created a number of additional features. For example, I created features such as 'total patients' and 'total payments,' 'proportion of total payments(and patients) that were X type,' and 'payments per patient' for each prescription drug type. I also created measures that incorporated the time series aspect of the data. For instance, for each provider ID, I created cumulative measures of patients and payments for each drug type. I also created a set of measures that measured the percentage change in payments over the previous month, within each provider ID, for each drug type. The addition of these measures resulted in 27 features, compared to six originally.
+
+Third, because many of the new measures are on different scales (some are counts of people, some are dollars, some are percentage change, etc.), it is good practice to center and scale them. In this case, from each value, I subtracted the mean of the feature and divided by the standard deviation. This way, all of the features are on an even playing field and can be analyzed with confidence.
+
+Lastly, I identified instances where features were highly correlated (greater than 0.9) with another one another and dropped one of these duplicates. This process dropped one variable (cumulative Adderall payments) from the analysis.
+
+
+
+
+```{r clean}
+d[is.na(d)] <- 0
+
+d2 <- d %>% 
+  mutate(yrmo = as.Date(paste(yrmo,"-01",sep=""))) %>%
+  #Clean up
+  mutate(AdderallPayments=ifelse(AdderallPayments<0,0,AdderallPayments+1),
+         AntibioPayments=ifelse(AntibioPayments<0,0,AntibioPayments+1),
+         OpioidPayments=ifelse(OpioidPayments<0,0,OpioidPayments+1)) %>% 
+  #Total/Proportions
+  mutate(TotalPayments=AdderallPayments+AntibioPayments+OpioidPayments+1,
+         TotalPatients=AdderallPatients+AntibioPatients+OpioidPatients,
+         PropPatAdd=AdderallPatients/TotalPatients,
+         PropPatAnti=AntibioPatients/TotalPatients,
+         PropPatOpi=OpioidPatients/TotalPatients,
+         PropPayAdd=AdderallPayments/TotalPayments,
+         PropPayAnti=AntibioPayments/TotalPayments,
+         PropPayOpi=OpioidPayments/TotalPayments,
+         PayPerAdd=coalesce(AdderallPayments/AdderallPatients,0),
+         PayPerAnti=coalesce(AntibioPayments/AntibioPatients,0),
+         PayPerOpi=coalesce(OpioidPayments/OpioidPatients,0),
+         
+         PatPerAdd=coalesce(AdderallPatients/AdderallPayments,0),
+         PatPerAnti=coalesce(AntibioPatients/AntibioPayments,0),
+         PatPerOpi=coalesce(OpioidPatients/OpioidPayments,0)
+         ) %>% 
+  group_by(ID) %>% 
+  arrange(yrmo) %>% 
+  #Cumulative
+  mutate(CumPatAdd=cumsum(AdderallPatients),
+         CumPatAnti=cumsum(AntibioPatients),
+         CumPatOpi=cumsum(OpioidPatients),
+         CumPayAdd=cumsum(AdderallPayments),
+         CumPayAnti=cumsum(AntibioPayments),
+         CumPayOpi=cumsum(OpioidPayments)) %>%
+  ##% Change
+  mutate(ChgPay=coalesce((TotalPayments-lag(TotalPayments))/lag(TotalPayments),0),
+         ChgPayAdd=coalesce((AdderallPayments-lag(AdderallPayments))/lag(AdderallPayments),0),
+         ChgPayAnti=coalesce((AntibioPayments-lag(AntibioPayments))/lag(AntibioPayments),0),
+         ChgPayOpi=coalesce((OpioidPayments-lag(OpioidPayments))/lag(OpioidPayments),0)) %>%
+  ungroup()
+
+
+
+
+#Fix infinites
+is.na(d2)<-sapply(d2, is.infinite)
+d2[is.na(d2)] <- 0
+
+#Center and scale
+preProcValues <- preProcess(d2, method = c("center", "scale"))
+d3 <- predict(preProcValues, d2)
+
+
+
+#Find highly correlated and drop one
+nums <- unlist(lapply(d3, is.numeric)) 
+descrCor <-  cor(d3[,nums])
+highlyCorDescr <- findCorrelation(descrCor, cutoff = .90)
+#names(d3[,highlyCorDescr])
+d3 <- d3[,-highlyCorDescr]
+
+
+#Sanity checks
+#summary(d3)
+#skimr::skim(d3)
+#Desc(d3$PayPerOpi)
+
+```
+
+
+## Exploratory Data Analysis
+
+Because the data is mostly numeric, I first examined the correlations between each of them, noting strong correlations between opioid-related measures and the proportion of antibiotics prescriptions, total payments, and total patients. 
+
+Next, I performed principal components analysis (PCA) to transform the features from highly-correlated ones into uncorrelated variables ('principal components'). After running the analysis, and plotting the proportion of variance that is explained by each principal component, I see that the first two principal components explain just over a quarter of the variance in the data, and that the first ten principal components explain 75 percent of the variance.
+
+Similarly, a biplot show some, but not great, separation among the features. These findings are somewhat expected since I have only a few variables to work with, and all of the features are derived from those in some way. Nevertheless, there is probably enough to work with to identify potential anomalous providers.
+
+```{r corr,fig.width=11,fig.height=11}
+
+#numeric variables
+d3num <- d3 %>%
+  purrr::keep(is.numeric)
+
+#Correlation matrix and plot
+res <- cor(d3num,use='pairwise.complete.obs')
+
+corrplot(res, type = "upper", #order = "hclust", 
+         tl.col = "black", tl.srt = 45,tl.cex=.6)
+
+
+
+```
+
+
+```{r pca,eval=T}
+
+#PCA
+d3_pca <- d3 %>% 
+nest() %>% 
+  mutate(pca = map(data, ~ prcomp(.x %>% dplyr::select(-ID,-yrmo), 
+                                  center = TRUE, scale = TRUE)),
+         pca_aug = map2(pca, data, ~augment(.x, data = .y)))
+
+
+
+#Variance explained
+var_exp <- d3_pca %>% 
+  unnest(pca_aug) %>% 
+  summarize_at(.vars = vars(contains("PC")), .funs = funs(var)) %>% 
+  gather(key = pc, value = variance) %>% 
+  mutate(var_exp = variance/sum(variance),
+         cum_var_exp = cumsum(var_exp),
+         pc = str_replace(pc, ".fitted", ""))
+
+#Variance explained plot
+var_exp %>% 
+  rename(
+    `Variance Explained` = var_exp,
+    `Cumulative Variance Explained` = cum_var_exp
+  ) %>% 
+  gather(key = key, value = value, `Variance Explained`:`Cumulative Variance Explained`) %>% 
+  dplyr::filter(pc %in% c('PC1','PC2','PC3','PC4','PC5','PC6','PC7','PC8','PC9','PC10')) %>% 
+  mutate(pc=factor(pc,levels=c('PC1','PC2','PC3','PC4','PC5','PC6','PC7','PC8','PC9','PC10'))) %>% 
+  arrange(pc) %>% 
+  ggplot(aes(pc, value, group = key)) + 
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~key, scales = "free_y") +
+  theme_minimal() +
+  lims(y = c(0, 1)) +
+  labs(y = "Variance",
+       title = "Variance explained by each principal component",
+       x="Principal Component",
+       y="Variance")
+
+#PCA Biplot
+d3_pca %>%
+  mutate(
+    pca_graph = map2(
+      .x = pca,
+      .y = data,
+      ~ autoplot(.x, loadings = TRUE, loadings.label = TRUE,
+                 loadings.label.repel = TRUE,
+                 data = .y
+                 ) +
+        theme_minimal() +
+        labs(x = "Principal Component 1",
+             y = "Principal Component 2",
+             title = "First two principal components of PCA on Prescription Dataset")
+    )
+  ) %>%
+  pull(pca_graph)
+
+
+
+
+```
+
+
+
+
+
+##K-means Clustering for Anomaly Detection
+
+I  decided to use an unsupervised technique, k-means clustering, to identify anomalous providers.  K-means is an appropriate choice when working with unlabeled data, and is very easy to implement. K-means is preferable over another clustering method, such as hierarchical clustering, because I am not trying to uncover any latent hierarchy in the data.
+
+The optimal number of clusters depends on the dataset, so one way to determine how many clusters should be used is to generate a range of clusters, and assess the error metric (sum of squared errors) to see where the metric begins to taper off or resemble an elbow. The plot below depicts the error metric against cluster values ranging from one to nine. There is an elbow shape around five or six clusters, suggesting this is an appropriate number of clusters to use on this dataset.
+
+Using six clusters results in one particular cluster that looks interesting. It consists of 27 observations and five providers.
+
+
+
+```{r clustering,eval=T}
+
+#Extract IDs and dates
+labs <- d3 %>% dplyr::select(ID,yrmo)
+
+#Generate clusters 1-9
+kclusts <- tibble(k = 1:9) %>%
+  mutate(
+    kclust = map(k, ~kmeans(d3num, .x)),
+    tidied = map(kclust, tidy),
+    glanced = map(kclust, glance),
+    augmented = map(kclust, augment, d3num)
+  )
+
+clusters <- kclusts %>%
+  unnest(tidied)
+
+assignments <- kclusts %>% 
+  unnest(augmented)
+
+clusterings <- kclusts %>%
+  unnest(glanced, .drop = TRUE)
+
+#Plot error by number of clusters
+clusterings %>% 
+  ggplot(aes(factor(k),tot.withinss))+
+  geom_point()+
+  theme_minimal()+
+  labs(title='Sum of Squared Errors by Number of Clusters',
+       x='Number of Clusters',
+       y='Sum of Squared Errors')
+
+
+#Count cluster observations and unique providers
+clustercounts <- assignments %>% 
+  dplyr::filter(k==6) %>% 
+  bind_cols(labs) %>% 
+  group_by(.cluster) %>%
+  summarise(Observations=n(),
+            `Unique Providers`=n_distinct(ID))
+
+
+
+  clustercounts %>% 
+  kable(caption='Cluster Observations and Provider Counts') %>% 
+  kable_styling(bootstrap_options = c("striped", "hold_position"),
+                full_width = F)
+
+#Identify the most interesting cluster
+  clustercounts %>% 
+  arrange(`Unique Providers`) %>% 
+  dplyr::filter(row_number()==1) %>% 
+  dplyr::select(.cluster) -> outliercluster
+
+
+#Extract the providers in the outlier cluster  
+outliers <- assignments %>% 
+  dplyr::filter(k==6) %>% 
+  bind_cols(labs) %>%
+  dplyr::filter(.cluster==outliercluster$.cluster) %>%
+  distinct(ID)
+
+outliers %>% 
+  rename(`Potentially Anomalous Provider IDs`=ID) %>% 
+  kable(caption='Anomalous Provider IDs') %>% 
+  kable_styling(bootstrap_options = c("striped", "hold_position"),
+                full_width = F)
+
+
+#Run means for each cluster
+scaled <- assignments %>% 
+  dplyr::filter(k==6) %>% 
+  bind_cols(labs)
+
+
+unscaled <- assignments %>% 
+  dplyr::filter(k==6) %>% 
+  dplyr::select(.cluster) %>% 
+  bind_cols(d2) %>% 
+  mutate(outlier=ifelse(ID %in% outliers$ID,1,0)) 
+
+unscaledstats <-   unscaled %>% 
+  dplyr::select(-ID,-yrmo,-outlier) %>% 
+  group_by(.cluster) %>% 
+  summarise_all(mean) 
+
+unscaledstats[,-1] <- round(unscaledstats[,-1],1)
+  
+  
+
+```
+
+
+##Exploring outliers
+
+The table and plots below highlight the five potentially anomalous providers for each of the metric groups. The five providers I identified clearly stand out with higher Adderall and opioid patients, higher payments for Adderall and opioids, higher rates of payment per patient, and higher than average rates of change in payments for each prescription type. For example, the cluster I identified averages 76 opioid patients and almost one million in opioid payments, when the next closest cluster averages about 3 opioid patients and 1,600 in opioid payments. Clearly, the five providers stick out as outliers within the group of 3,000 total providers.
+```{r outliers,eval=T, cache=T}
+
+
+
+
+#Table of feature means by cluster
+  unscaledstats  %>% 
+  kable(caption='Unscaled Feature Means by Cluster') %>% 
+  kable_styling(bootstrap_options = c("striped", "hold_position"),
+                full_width = F)
+
+
+
+#Long dataframe of metrics by ID and cluster
+clustersm <-  assignments %>% 
+  dplyr::filter(k==6) %>% 
+  dplyr::select(.cluster) %>% 
+  bind_cols(d2) %>% 
+  mutate(outlier=ifelse(ID %in% outliers$ID,1,0)) %>%
+  reshape2::melt(id.vars=c('.cluster','ID','yrmo','outlier')) 
+
+
+
+
+
+
+
+#Plot Patient Measures  
+ patientplot <-  clustersm %>% 
+  dplyr::filter(str_detect(variable,"Patients")) %>%
+  droplevels() %>%
+  gghighlight_line(aes(yrmo, value, group=ID,color=outlier),
+                   max(outlier)>0,use_direct_label = F) +
+  facet_wrap(~variable,scales='free_y')+
+  theme_minimal()+
+    theme(legend.position='false')+
+  labs(title='Prescription Metrics, Patient Measures',
+       subtitle='Outliers highlighted',
+       x='Year & Month',y='Value')
+
+ 
+#Plot Payment Measures
+paymentplot <-  clustersm %>%
+  dplyr::filter(str_detect(variable,"Payments")) %>%
+  droplevels() %>%
+  gghighlight_line(aes(yrmo, value, group=ID,color=outlier),
+                   max(outlier)>0,use_direct_label = F) +
+  facet_wrap(~variable,scales='free_y')+
+  theme_minimal()+
+    theme(legend.position='false')+
+  labs(title='Prescription Metrics, Payment Measures',
+       subtitle='Outliers highlighted',
+       x='Year & Month',y='Value')
+
+#Plot Proportion Measures
+propplot <- clustersm %>%
+  dplyr::filter(str_detect(variable,"Prop")) %>%
+  droplevels() %>%
+  gghighlight_line(aes(yrmo, value, group=ID,color=outlier),
+                   max(outlier)>0,use_direct_label = F) +
+  facet_wrap(~variable,scales='free_y')+
+  theme_minimal()+
+    theme(legend.position='false')+
+  labs(title='Prescription Metrics, Proportion Measures',
+       subtitle='Outliers highlighted',
+       x='Year & Month',y='Value')
+
+#Plot Cumulative Measures
+cumuplot <- clustersm %>%
+  dplyr::filter(str_detect(variable,"Cum")) %>%
+  droplevels() %>%
+  gghighlight_line(aes(yrmo, value, group=ID,color=outlier),
+                   max(outlier)>0,use_direct_label = F) +
+  facet_wrap(~variable,scales='free_y')+
+  theme_minimal()+
+    theme(legend.position='false')+
+  labs(title='Prescription Metrics, Cumulative Measures',
+       subtitle='Outliers highlighted',
+       x='Year & Month',y='Value')
+
+
+#Plot Percentage Change Measures
+chgplot <- clustersm %>%
+  dplyr::filter(str_detect(variable,"Chg")) %>%
+  droplevels() %>%
+  gghighlight_line(aes(yrmo, value, group=ID,color=outlier),
+                   max(outlier)>0,use_direct_label = F) +
+  facet_wrap(~variable,scales='free_y')+
+  theme_minimal()+
+    theme(legend.position='false')+
+  labs(title='Prescription Metrics, Percentage Change Measures',
+       subtitle='Outliers highlighted',
+       x='Year & Month',y='Value')
+
+
+#Display plots
+patientplot
+paymentplot
+#propplot
+cumuplot
+chgplot
+
+
+
+```
+
+## Limitations and Further Research
+
+Although I am confident that my methods correctly identified five anomalous providers out of over 3,000, there are certainly limitations to the analysis and ways in which it could be improved.
+
+First, I have only limited data and no context for the analysis. The providers I identified could be located in densely-populated areas, or specialize in ADHD & pain management, which might explain the high rates of Adderall and opioid prescriptions. If I had access to data regarding the locality, specialization, or other metrics regarding patients and payments, the analysis could be improved.
+
+Second, although the data is time-series in nature, I did not attempt to decompose the time-series to its core components to identify seasonality, trend, or cyclical patterns. It is possible that using that technique may give different results.
+
+Third, because I chose an unsupervised approach, I have no ability to confirm the accuracy of my findings. If the exercise included labels about known over-prescribing providers, I could build a supervised learning model that predicts the likelihood of over-prescribing.
+
+Finally, I have no information about the resources available to investigate potentially anomalous providers.  My approach identified five providers out of over 3,000, about one tenth of a percent.  If an oversight agency has resources to investigate one percent, or just one provider, the results of my analysis may change.
+
+
+## Conclusion
+
+This was an enlightening exercise with real-world implications. As the prompt described, over-prescription creates serious challenges for public health. Using unsupervised learning techniques, I was able to identify five providers out of over 3,000 whose prescribing behavior seems anomalous and warrants further investigation.
+
+The five providers with potentially anomalous prescribing patterns are those listed below.
+
+```{r finaltable}
+
+#Table of outlier Providers
+outliers %>% 
+  rename(`Potentially Anomalous Provider IDs`=ID) %>% 
+  kable(caption='Anomalous Provider IDs') %>% 
+  kable_styling(bootstrap_options = c("striped", "hold_position"),
+                full_width = F)
+
+```
+
